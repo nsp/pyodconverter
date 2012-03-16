@@ -9,6 +9,7 @@
 # - or any later version.
 #
 DEFAULT_OPENOFFICE_PORT = 2002
+DEFAULT_OPENOFFICE_PIPE = "ooo_pipe"
 
 import uno
 from os.path import abspath, isfile, splitext
@@ -121,13 +122,16 @@ class DocumentConversionException(Exception):
 
 class DocumentConverter:
     
-    def __init__(self, port=DEFAULT_OPENOFFICE_PORT):
+    def __init__(self, port=DEFAULT_OPENOFFICE_PORT, pipe=DEFAULT_OPENOFFICE_PIPE):
         localContext = uno.getComponentContext()
         resolver = localContext.ServiceManager.createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver", localContext)
         try:
-            context = resolver.resolve("uno:socket,host=localhost,port=%s;urp;StarOffice.ComponentContext" % port)
+            pipestr = "uno:pipe,name=%s;urp;StarOffice.ComponentContext" % pipe
+            sockstr = "uno:socket,host=localhost,port=%s;urp;StarOffice.ComponentContext" % port
+            context = resolver.resolve(pipestr)
         except NoConnectException:
-            raise DocumentConversionException, "failed to connect to OpenOffice.org on port %s" % port
+#            raise DocumentConversionException, "failed to connect to OpenOffice.org on port %s" % port
+            raise DocumentConversionException, "failed to connect to OpenOffice.org on pipe %s" % pipe
         self.desktop = context.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", context)
 
     def convert(self, inputFile, outputFile):
